@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #eef8f7;
+  --foreground: #1f2f36;
+  --card: #fbfefd;
+  --card-foreground: #20353c;
+  --muted: #d8eeeb;
+  --muted-foreground: #5a7279;
+  --border: #accccc;
+  --accent: #087f93;
+  --accent-foreground: #f6ffff;
+}
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-heading);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+}
+
+.section-shell {
+  margin-inline: auto;
+  width: min(60rem, 100%);
+  padding-inline: 1rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), Georgia, "Times New Roman", serif;
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+@keyframes toast-life {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.75rem);
+    visibility: visible;
+  }
+  10%,
+  82% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0.75rem);
+    visibility: hidden;
+  }
+}
