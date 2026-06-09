@@ -140,6 +140,7 @@ export const deleteMemoryAction = async (
     };
   }
 
+  revalidatePath(`/${memorialSlug}`);
   revalidatePath(`/${memorialSlug}/admin/memories`);
   return {
     ok: true,
@@ -198,6 +199,7 @@ export const updateMemoryApprovalAction = async (
     };
   }
 
+  revalidatePath(`/${memorialSlug}`);
   revalidatePath(`/${memorialSlug}/admin/memories`);
   return {
     ok: true,
@@ -284,6 +286,7 @@ export const updateMemoryAction = async (
     };
   }
 
+  revalidatePath(`/${memorialSlug}`);
   revalidatePath(`/${memorialSlug}/admin/memories`);
   return {
     ok: true,

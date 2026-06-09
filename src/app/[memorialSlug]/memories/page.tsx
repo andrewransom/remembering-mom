@@ -119,7 +119,6 @@ export default function MemoriesPage() {
                 maxLength={200}
                 autoComplete="name"
                 className={fieldInputClassName}
-                placeholder="How you'd like to be known"
                 defaultValue={nameValue}
               />
               {state.errors?.name ? (

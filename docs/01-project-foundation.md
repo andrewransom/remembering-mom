@@ -10,7 +10,7 @@ Create the initial Next.js application structure and shared UI foundation for a 
 - Tailwind CSS and shadcn-style UI primitives.
 - Shared layout, typography, color tokens, and navigation.
 - Dynamic route model: `/<name-slug>/...`.
-- Cloudflare/OpenNext deployment path documented before relying on server behavior.
+- Deployment path documented before relying on server behavior. Historical note: this originally targeted Cloudflare/OpenNext before the AWS/SST migration.
 - Local development defaults use port `3076`.
 
 ## Key Decisions
@@ -38,7 +38,7 @@ Create the initial Next.js application structure and shared UI foundation for a 
 - `npm run dev` starts on port `3076`.
 - Required routes render when Supabase is configured and a published memorial exists.
 - Navigation becomes memorial-scoped when on a memorial route.
-- Cloudflare adapter choice, commands, and runtime limitations are documented.
+- Deployment adapter choice, commands, and runtime limitations are documented.
 - `.env.example` lists required Supabase and preview-cookie env vars.
 
 ## Not Included

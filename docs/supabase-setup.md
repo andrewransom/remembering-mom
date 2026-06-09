@@ -39,6 +39,10 @@ Or run these SQL files in order:
 
 1. `supabase/migrations/202606060001_memory_and_condolence_tables.sql`
 2. `supabase/migrations/202606060002_storage_buckets_and_policies.sql`
+3. `supabase/migrations/202606060003_add_condolence_source.sql`
+4. `supabase/migrations/202606070001_add_memory_photo_paths.sql`
+5. `supabase/migrations/202606070002_add_memory_approval.sql`
+6. `supabase/migrations/202606090001_public_approved_memories_select.sql`
 
 They create:
 
@@ -103,7 +107,7 @@ Signed out:
 
 - `memorials`: can select published rows only
 - `memories`: can insert for published memorials
-- `memories`: cannot select
+- `memories`: can select approved memories for published memorials
 - `condolences`: no access
 
 Signed in:
@@ -119,19 +123,23 @@ Local hosted-project Auth settings:
 - Site URL: `http://localhost:3076`
 - Redirect URL: `http://localhost:3076/**`
 
-After deployment, add Cloudflare preview/production URLs, for example:
+Before smoke-testing login on the AWS deployment, add the production redirect URL:
 
-- `https://<project>.pages.dev/**`
+- Site URL: `https://remember.ketseba.com`
+- Redirect URL: `https://remember.ketseba.com/**`
 
-## 9) Cloudflare env vars
+Keep any previous production redirect URL until the AWS smoke tests pass, then remove it.
 
-Configure these outside the repo:
+## 9) AWS/SST env vars
+
+Configure production values as SST secrets:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `PREVIEW_COOKIE_SECRET`
-- `NEXT_PUBLIC_SITE_URL`
+
+`NEXT_PUBLIC_SITE_URL` is set in `sst.config.ts` for production.
 
 ## 10) Local commands
 

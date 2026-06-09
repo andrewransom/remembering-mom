@@ -2,11 +2,15 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ExternalLink, Info } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPublishedMemorialBySlug } from "@/lib/supabase/memorials";
+import { listApprovedMemoriesForPublic, type PublicMemoryRow } from "@/lib/supabase/memories";
+import { buildMemoryPhotoPublicUrl, buildProfilePhotoPublicUrl } from "@/lib/supabase/storage";
 import type { DonationLink } from "@/lib/supabase/types";
 import { ProfilePhotoLightbox } from "./profile-photo-lightbox";
+import { PublicMemoriesSection } from "./public-memories-section";
 
 type MemorialPageProps = {
   params: Promise<{
@@ -33,6 +37,31 @@ const getMemorial = cache(async (slug: string) => {
 
   return { memorial: data, client };
 });
+
+const getExternalUrl = (url: string | null | undefined) => {
+  const trimmedUrl = url?.trim();
+  if (!trimmedUrl || !URL.canParse(trimmedUrl)) return null;
+
+  const parsedUrl = new URL(trimmedUrl);
+  return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:" ? trimmedUrl : null;
+};
+
+const LOCAL_PROFILE_PHOTO_FALLBACK = "/jenny-flowers.jpg";
+
+const toPublicMemoryRows = (
+  rows: PublicMemoryRow[],
+  client: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+) => {
+  return rows.map((memory) => ({
+    id: memory.id,
+    author_name: memory.author_name,
+    message: memory.message,
+    created_at: memory.created_at,
+    photoUrls: Array.from(
+      new Set([memory.photo_path, ...memory.photo_paths].filter((photoPath): photoPath is string => Boolean(photoPath))),
+    ).map((photoPath) => buildMemoryPhotoPublicUrl(client, photoPath)),
+  }));
+};
 
 export async function generateMetadata({ params }: MemorialPageProps): Promise<Metadata> {
   const { memorialSlug } = await params;
@@ -68,8 +97,23 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
     notFound();
   }
 
-  const { memorial } = result;
+  const { client, memorial } = result;
   const dates = [memorial.birth_date, memorial.death_date].filter(Boolean).join(" - ");
+  const profilePhotoUrl = memorial.profile_photo_path
+    ? buildProfilePhotoPublicUrl(client, memorial.profile_photo_path)
+    : LOCAL_PROFILE_PHOTO_FALLBACK;
+  const { data: memoryRows, error: memoriesError } =
+    await listApprovedMemoriesForPublic(client, memorial.id);
+
+  if (memoriesError) {
+    console.error("Failed to load approved memories for public memorial page", {
+      memorialId: memorial.id,
+      memorialSlug,
+      error: memoriesError,
+    });
+  }
+
+  const memories = memoryRows ? toPublicMemoryRows(memoryRows, client) : [];
 
   return (
     <div className="section-shell py-10 sm:py-16">
@@ -80,7 +124,8 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
           </p>
           <div className="flex justify-center pb-2">
             <ProfilePhotoLightbox
-              src="/jenny-flowers.jpg"
+              src={profilePhotoUrl}
+              fallbackSrc={LOCAL_PROFILE_PHOTO_FALLBACK}
               personName={memorial.person_name}
             />
           </div>
@@ -100,30 +145,70 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
 
         {memorial.donation_links.length > 0 ? (
           <section aria-label="Donation links" className="mt-10 rounded-3xl border border-border/80 bg-card/80 p-6 text-center">
-            <h2 className="mb-2 text-2xl font-semibold">Support in remembrance</h2>
+            <h2 className="mb-2 text-2xl font-semibold">In lieu of flowers</h2>
             <p className="mb-4 text-muted-foreground">
-              If you would like to support causes meaningful to her, here are donation options.
+              Please consider donating to one of the following charities that were important to Jenny.
             </p>
             <ul className="space-y-4">
-              {memorial.donation_links.map((donation: DonationLink) => (
-                <li key={donation.url} className="space-y-1">
-                  <a
-                    href={donation.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${donation.organizationName} (opens in a new tab)`}
-                    className="inline-flex items-center justify-center gap-1 text-lg text-accent underline-offset-4 transition hover:text-accent/80 hover:underline"
-                  >
-                    <span>{donation.organizationName}</span>
-                    <span aria-hidden="true">↗</span>
-                  </a>
-                  <p className="text-sm text-muted-foreground">{donation.description}</p>
-                </li>
-              ))}
+              {memorial.donation_links.map((donation: DonationLink, donationIndex) => {
+                const linkName = donation.link.name || "Donate";
+                const donationUrl = getExternalUrl(donation.link.url);
+
+                return (
+                  <li key={`${donation.link.url}-${donationIndex}`} className="space-y-3">
+                    <ul className="divide-y divide-border/70 text-left">
+                      {donation.details.map((detail, detailIndex) => {
+                        const detailInfoUrl = getExternalUrl(detail.info_link);
+
+                        return (
+                          <li key={`${detail.name}-${detailIndex}`} className="space-y-1 py-3 first:pt-0 last:pb-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <h3 className="text-base font-medium text-foreground">{detail.name}</h3>
+                              {detailInfoUrl ? (
+                                <a
+                                  href={detailInfoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  aria-label={`More information about ${detail.name} (opens in a new tab)`}
+                                  className="mt-0.5 inline-flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted/60 hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+                                >
+                                  <Info aria-hidden="true" className="size-3.5" />
+                                </a>
+                              ) : null}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{detail.description}</p>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    {donationUrl ? <div className="border-t border-border/70 pt-3" aria-hidden="true" /> : null}
+                    {donationUrl ? (
+                      <a
+                        href={donationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${linkName} (opens in a new tab)`}
+                        className={`${buttonVariants({ size: "lg" })} gap-2 shadow-md`}
+                      >
+                        <span>{linkName}</span>
+                        <ExternalLink aria-hidden="true" className="size-4" />
+                      </a>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
           </section>
         ) : null}
+
       </article>
+
+      {memories.length > 0 ? (
+        <PublicMemoriesSection
+          memorialName={memorial.person_name}
+          memories={memories}
+        />
+      ) : null}
     </div>
   );
 }

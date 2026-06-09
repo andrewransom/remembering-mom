@@ -5,15 +5,10 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev -p 3076",
-    "cf:build": "npx opennextjs-cloudflare build",
-    "cf:dev": "npx wrangler dev",
-    "cf:deploy": "npx opennextjs-cloudflare deploy",
     "start": "next start -p 3076",
     "lint": "eslint",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "deploy": "sst deploy --stage production",
+    "deploy:dev": "sst deploy"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
@@ -24,10 +19,10 @@
     "next": "16.2.7",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "sst": "^4.15.2",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.19.11",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -35,7 +30,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
-    "typescript": "^5",
-    "wrangler": "^4.98.0"
+    "typescript": "^5"
   }
 }

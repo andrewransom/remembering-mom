@@ -12,7 +12,7 @@ A warm, simple memorial website that can host multiple memorial pages. Each memo
 | Styling | Tailwind CSS |
 | UI Components | shadcn/ui-style primitives |
 | Database & Auth | Supabase Postgres, Auth, Storage |
-| Hosting | Cloudflare with OpenNext adapter |
+| Hosting | AWS with SST/OpenNext adapter |
 
 ## URL Model
 
@@ -29,7 +29,8 @@ Routes are memorial-scoped by slug:
 ## Access Control
 
 - Public visitors can view published memorial landing pages and submit memories/photos for a published memorial.
-- Public visitors cannot browse submitted memories.
+- Public visitors can view approved memories on the memorial landing page.
+- Public visitors cannot browse unapproved or unmoderated memories.
 - Admins are manually created Supabase Auth users.
 - Any authenticated user is an admin for v1 and can manage all memorials.
 - Public Supabase signup must be disabled.
@@ -51,6 +52,7 @@ Public. Renders content from the `memorials` table:
 - Birth and death dates
 - Tribute paragraphs
 - Donation links
+- Approved memories (read-only), displayed below the donation section
 
 ### Memory submission (`/<name-slug>/memories`)
 
@@ -123,13 +125,13 @@ Global email/password Supabase Auth login. Successful login redirects to `/`.
 ## RLS Summary
 
 - `memorials`: public can select published rows; authenticated can manage all rows.
-- `memories`: public can insert only for published memorials; public select denied; authenticated select/delete all.
+- `memories`: public can insert only for published memorials; public can select approved memories for published memorials; authenticated select/delete all.
 - `condolences`: public denied; authenticated select/insert/delete all.
 
 ## Out of Scope
 
 - Per-memorial admin roles
-- Public memory feed
+- Unmoderated/all-memories public feed
 - Email notifications
 - Payment processing
 - Custom domain

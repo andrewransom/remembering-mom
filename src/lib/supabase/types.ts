@@ -7,9 +7,15 @@ export type Json =
   | Json[];
 
 export type DonationLink = {
-  organizationName: string;
-  description: string;
-  url: string;
+  details: {
+    name: string;
+    description: string;
+    info_link?: string | null;
+  }[];
+  link: {
+    name: string;
+    url: string;
+  };
 };
 
 export type Database = {

@@ -1,20 +1,44 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+
+const FALLBACK_IMAGE = "/landing-profile-fallback.svg";
 
 type ProfilePhotoLightboxProps = {
   personName: string;
   src: string;
+  fallbackSrc?: string;
 };
 
 const iconButtonClassName =
   "inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-black/45 text-white transition hover:bg-black/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white";
 
-export function ProfilePhotoLightbox({ personName, src }: ProfilePhotoLightboxProps) {
+export function ProfilePhotoLightbox({
+  personName,
+  src,
+  fallbackSrc,
+}: ProfilePhotoLightboxProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [fallbackStage, setFallbackStage] = useState<"primary" | "fallback" | "placeholder">("primary");
+  const resolvedSrc =
+    fallbackStage === "primary"
+      ? src
+      : fallbackStage === "fallback" && fallbackSrc
+        ? fallbackSrc
+        : FALLBACK_IMAGE;
+
+  const handleImageError = () => {
+    if (fallbackStage === "primary" && fallbackSrc && fallbackSrc !== src) {
+      setFallbackStage("fallback");
+      return;
+    }
+
+    if (fallbackStage !== "placeholder") {
+      setFallbackStage("placeholder");
+    }
+  };
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -49,13 +73,11 @@ export function ProfilePhotoLightbox({ personName, src }: ProfilePhotoLightboxPr
         onClick={() => setIsOpen(true)}
         aria-label={`Open full profile photo of ${personName}`}
       >
-        <Image
-          src={src}
+        <img
+          src={resolvedSrc}
           alt={`Flowers in memory of ${personName}`}
-          width={176}
-          height={176}
-          priority
           className="h-36 w-36 rounded-full border border-border object-cover shadow-sm transition group-hover:brightness-95 sm:h-44 sm:w-44"
+          onError={handleImageError}
         />
       </button>
 
@@ -79,12 +101,11 @@ export function ProfilePhotoLightbox({ personName, src }: ProfilePhotoLightboxPr
             <X aria-hidden="true" size={20} />
           </button>
 
-          <Image
-            src={src}
+          <img
+            src={resolvedSrc}
             alt={`Full profile photo of ${personName}`}
-            width={1200}
-            height={1600}
             className="max-h-[82dvh] w-auto max-w-full rounded-xl object-contain shadow-2xl"
+            onError={handleImageError}
           />
         </div>
       </dialog>

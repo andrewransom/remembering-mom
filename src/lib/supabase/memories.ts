@@ -5,6 +5,11 @@ import { deleteMemoryPhotos } from "./storage";
 
 type MemoryRow = Database["public"]["Tables"]["memories"]["Row"];
 
+export type PublicMemoryRow = Pick<
+  MemoryRow,
+  "id" | "memorial_id" | "author_name" | "message" | "photo_path" | "photo_paths" | "created_at"
+>;
+
 export const listRecentMemoriesForModeration = (
   client: SupabaseClient<Database>,
   memorialId: string,
@@ -17,6 +22,20 @@ export const listRecentMemoriesForModeration = (
     .order("created_at", { ascending: false })
     .limit(limit)
     .returns<MemoryRow[]>();
+};
+
+export const listApprovedMemoriesForPublic = (
+  client: SupabaseClient<Database>,
+  memorialId: string,
+) => {
+  return client
+    .from("memories")
+    .select("id, memorial_id, author_name, message, photo_path, photo_paths, created_at")
+    .eq("memorial_id", memorialId)
+    .eq("is_approved", true)
+    .order("created_at", { ascending: true })
+    .limit(100)
+    .returns<PublicMemoryRow[]>();
 };
 
 export const createMemorySubmission = (

@@ -46,7 +46,7 @@ Create Supabase backing services for multiple memorials, scoped memories, scoped
 ## RLS Policy Plan
 
 - `memorials`: public select only when `is_published = true`; authenticated users can manage all.
-- `memories`: public insert only for published memorials; public select denied; authenticated select/delete all.
+- `memories`: public insert only for published memorials; public select approved memories for published memorials; authenticated select/delete all.
 - `condolences`: public access denied; authenticated select/insert/delete all.
 
 ## Storage Plan
@@ -60,7 +60,7 @@ Create Supabase backing services for multiple memorials, scoped memories, scoped
 
 - Migrations apply to a fresh Supabase project.
 - Public users can select published memorials.
-- Public users cannot select memories or condolences.
+- Public users can select approved memories for published memorials, but cannot select unapproved memories or condolences.
 - Public users can insert memories for published memorials only.
 - Authenticated users can manage memorial records and private logs.
 - Direct anonymous storage upload is not broadly allowed.
