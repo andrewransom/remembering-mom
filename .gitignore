@@ -46,3 +46,6 @@ sst-env.d.ts
 
 # OpenNext build output
 .open-next
+
+# Graphify
+/graphify-out

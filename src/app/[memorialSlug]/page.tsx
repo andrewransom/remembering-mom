@@ -3,11 +3,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ExternalLink, Info } from "lucide-react";
+import { EventDetails } from "@/components/event-details";
 import { buttonVariants } from "@/components/ui/button";
+import { hasMinimumPublicEventDetails } from "@/lib/event-format";
+import { getPublishedEventByMemorialId } from "@/lib/supabase/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getPublishedMemorialBySlug } from "@/lib/supabase/memorials";
 import { listApprovedMemoriesForPublic, type PublicMemoryRow } from "@/lib/supabase/memories";
-import { buildMemoryPhotoPublicUrl, buildProfilePhotoPublicUrl } from "@/lib/supabase/storage";
+import { appendCacheVersion, buildMemoryPhotoPublicUrl, buildProfilePhotoPublicUrl } from "@/lib/supabase/storage";
 import type { DonationLink } from "@/lib/supabase/types";
 import { ProfilePhotoLightbox } from "./profile-photo-lightbox";
 import { PublicMemoriesSection } from "./public-memories-section";
@@ -100,10 +103,20 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
   const { client, memorial } = result;
   const dates = [memorial.birth_date, memorial.death_date].filter(Boolean).join(" - ");
   const profilePhotoUrl = memorial.profile_photo_path
-    ? buildProfilePhotoPublicUrl(client, memorial.profile_photo_path)
+    ? appendCacheVersion(
+        buildProfilePhotoPublicUrl(client, memorial.profile_photo_path),
+        memorial.updated_at,
+      )
     : LOCAL_PROFILE_PHOTO_FALLBACK;
+  const hasBio = Boolean(memorial.bio?.trim());
+  const titleName = memorial.display_name?.trim()
+    || memorial.person_name;
+  const readAboutName = memorial.first_name?.trim()
+    || memorial.display_name?.trim()
+    || memorial.person_name;
   const { data: memoryRows, error: memoriesError } =
     await listApprovedMemoriesForPublic(client, memorial.id);
+  const { data: event } = await getPublishedEventByMemorialId(client, memorial.id);
 
   if (memoriesError) {
     console.error("Failed to load approved memories for public memorial page", {
@@ -117,7 +130,7 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
 
   return (
     <div className="section-shell py-10 sm:py-16">
-      <article className="mx-auto w-full max-w-[68ch] pb-4">
+      <article className="mx-auto w-full max-w-[60rem] pb-4">
         <header className="space-y-2 text-center">
           <p className="text-sm uppercase tracking-[0.18em] text-muted-foreground">
             In Loving Memory
@@ -130,18 +143,56 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
             />
           </div>
           <h1 className="text-4xl font-semibold leading-tight sm:text-5xl">
-            {memorial.person_name}
+            {titleName}
           </h1>
           {dates ? <p className="text-lg text-muted-foreground">{dates}</p> : null}
-          <div className="flex justify-center pt-4">
+          <div className="flex flex-wrap justify-center gap-3 pt-4 min-[560px]:flex-nowrap">
+            {hasBio ? (
+              <Link
+                href={`/${memorialSlug}/about`}
+                className={buttonVariants({
+                  variant: "secondary",
+                  size: "lg",
+                  className: "w-56 rounded-full border-2 border-accent bg-white px-6 text-lg font-semibold text-accent shadow-[0_2px_7px_rgba(8,127,147,0.18)] hover:bg-white hover:brightness-95 sm:w-60",
+                })}
+              >
+                  Read about {readAboutName}
+                </Link>
+            ) : null}
             <Link
               href={`/${memorialSlug}/memories`}
-              className={buttonVariants({ size: "lg" })}
+              className={buttonVariants({
+                size: "lg",
+                className: "w-56 rounded-full px-6 text-lg font-semibold sm:w-60",
+              })}
             >
               Share a Memory
             </Link>
+            {event && hasMinimumPublicEventDetails(event) ? (
+              <Link
+                href={`/${memorialSlug}/event/rsvp`}
+                className={buttonVariants({
+                  size: "lg",
+                  className: "w-56 rounded-full px-6 text-lg font-semibold sm:w-60",
+                })}
+              >
+                RSVP
+              </Link>
+            ) : null}
           </div>
         </header>
+
+        {memorial.tribute_paragraphs.length > 0 ? (
+          <section className="mt-8 space-y-5 text-lg leading-8 text-foreground/90">
+            {memorial.tribute_paragraphs.map((paragraph, index) => (
+              <p key={`${paragraph.slice(0, 24)}-${index}`}>{paragraph}</p>
+            ))}
+          </section>
+        ) : null}
+
+        {event && hasMinimumPublicEventDetails(event) ? (
+          <EventDetails event={event} memorialSlug={memorialSlug} showRsvpButton showLocationMap />
+        ) : null}
 
         {memorial.donation_links.length > 0 ? (
           <section aria-label="Donation links" className="mt-10 rounded-3xl border border-border/80 bg-card/80 p-6 text-center">
@@ -205,7 +256,7 @@ export default async function MemorialHome({ params }: MemorialPageProps) {
 
       {memories.length > 0 ? (
         <PublicMemoriesSection
-          memorialName={memorial.person_name}
+          memorialName={memorial.first_name?.trim() || memorial.person_name}
           memories={memories}
         />
       ) : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ArrowUp, ArrowDown } from "lucide-react";
 
 type PublicMemoryItem = {
   id: string;
@@ -31,6 +31,13 @@ export function PublicMemoriesSection({ memorialName, memories }: PublicMemories
     memoryId: string;
     index: number;
   } | null>(null);
+  const [sortNewestFirst, setSortNewestFirst] = useState(true);
+
+  const sortedMemories = [...memories].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return sortNewestFirst ? dateB - dateA : dateA - dateB;
+  });
 
   const selectedMemory = selectedPhoto
     ? memories.find((memory) => memory.id === selectedPhoto.memoryId)
@@ -100,9 +107,24 @@ export function PublicMemoriesSection({ memorialName, memories }: PublicMemories
 
   return (
     <section className="mt-10 rounded-3xl border border-border/80 bg-card/80 p-6">
-      <h2 className="mb-5 text-2xl font-semibold">Memories of {memorialName}</h2>
+      <div className="mb-5 flex items-center justify-between gap-3">
+        <h2 className="text-2xl font-semibold">Memories of {memorialName}</h2>
+        <button
+          type="button"
+          onClick={() => setSortNewestFirst(!sortNewestFirst)}
+          className="inline-flex items-center justify-center rounded-lg border border-border bg-card/50 p-2 text-muted-foreground transition hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          aria-label={sortNewestFirst ? "Sort oldest first" : "Sort newest first"}
+          title={sortNewestFirst ? "Showing newest first" : "Showing oldest first"}
+        >
+          {sortNewestFirst ? (
+            <ArrowDown aria-hidden="true" size={20} />
+          ) : (
+            <ArrowUp aria-hidden="true" size={20} />
+          )}
+        </button>
+      </div>
       <ul className="space-y-4">
-        {memories.map((memory) => (
+        {sortedMemories.map((memory) => (
           <li key={memory.id} className="rounded-xl border border-border bg-card/50 p-4">
             <div className="mb-3">
               <p className="break-words text-sm font-medium">{memory.author_name}</p>

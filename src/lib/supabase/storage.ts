@@ -3,7 +3,10 @@ import { Database } from "./types";
 
 export const MEMORY_BUCKET = "memories";
 export const PROFILE_BUCKET = "profile";
-export const PROFILE_PHOTO_FILE_NAME = "main.webp";
+export const PROFILE_PHOTO_BASENAME = "main";
+export const SECONDARY_PHOTO_BASENAME = "secondary";
+export const MEMORIAL_PHOTO_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const MAX_MEMORIAL_PHOTO_BYTES = 10 * 1024 * 1024;
 
 export const MEMORY_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const MAX_MEMORY_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -31,8 +34,25 @@ export type MemoryPhotoValidationResult =
       details: string;
     };
 
-export const buildProfilePhotoPath = (memorialId: string) => {
-  return `${memorialId}/${PROFILE_PHOTO_FILE_NAME}`;
+export const getMemorialPhotoExtension = (
+  mimeType: string,
+): "jpg" | "png" | "webp" | null => {
+  if (mimeType === "image/jpeg") return "jpg";
+  if (mimeType === "image/png") return "png";
+  if (mimeType === "image/webp") return "webp";
+  return null;
+};
+
+export const buildProfilePhotoPath = (memorialId: string, extension = "webp") => {
+  return `${memorialId}/${PROFILE_PHOTO_BASENAME}.${extension}`;
+};
+
+export const buildSecondaryPhotoPath = (memorialId: string, extension = "webp") => {
+  return `${memorialId}/${SECONDARY_PHOTO_BASENAME}.${extension}`;
+};
+
+export const appendCacheVersion = (url: string, version: string | number) => {
+  return `${url}?v=${encodeURIComponent(String(version))}`;
 };
 
 export const validateMemoryPhoto = (

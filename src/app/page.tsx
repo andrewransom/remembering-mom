@@ -31,19 +31,23 @@ export default async function Home() {
         ) : null}
 
         <ul className="space-y-4">
-          {memorials?.map((memorial: MemorialRow) => (
-            <li key={memorial.id}>
-              <Link
-                href={`/${memorial.slug}`}
-                className="block rounded-2xl border border-border bg-card p-6 transition hover:border-accent/60"
-              >
-                <h2 className="text-2xl font-semibold">{memorial.person_name}</h2>
-                <p className="mt-1 text-muted-foreground">
-                  {[memorial.birth_date, memorial.death_date].filter(Boolean).join(" - ") || "Memorial page"}
-                </p>
-              </Link>
-            </li>
-          ))}
+          {memorials?.map((memorial: MemorialRow) => {
+            const displayName = memorial.display_name?.trim() || memorial.person_name;
+
+            return (
+              <li key={memorial.id}>
+                <Link
+                  href={`/${memorial.slug}`}
+                  className="block rounded-2xl border border-border bg-card p-6 transition hover:border-accent/60"
+                >
+                  <h2 className="text-2xl font-semibold">{displayName}</h2>
+                  <p className="mt-1 text-muted-foreground">
+                    {[memorial.birth_date, memorial.death_date].filter(Boolean).join(" - ") || "Memorial page"}
+                  </p>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>

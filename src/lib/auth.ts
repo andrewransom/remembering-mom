@@ -7,20 +7,26 @@ export type AuthenticatedUser = {
 };
 
 export const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
-  const supabaseClient = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error,
-  } = await supabaseClient.auth.getUser();
+  try {
+    const supabaseClient = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error,
+    } = await supabaseClient.auth.getUser();
 
-  if (error || !user) {
+    if (error || !user) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email ?? null,
+    };
+  } catch {
+    // Invalid or stale auth cookies (for example a missing refresh token)
+    // should be treated as logged-out rather than failing the render.
     return null;
   }
-
-  return {
-    id: user.id,
-    email: user.email ?? null,
-  };
 };
 
 export const requireAuthenticatedUser = async (redirectTo = "/login") => {
